@@ -1,0 +1,5 @@
+nmap <C-m> :NERDTreeFind<CR>
+nmap <C-n> :NERDTreeToggle<CR>
+
+autocmd BufRead,BufNewFile *.md setlocal textwidth=0
+set clipboard=unnamed

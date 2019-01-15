@@ -1,0 +1,6 @@
+alias ..="cd .."
+alias exp="expo-cli"
+alias gs="git status"
+alias be="bundle exec"
+alias railss="bundle exec rails s -b 0.0.0.0"
+alias edit-vimrc="vim ~/dotfiles-local/vimrc.local"

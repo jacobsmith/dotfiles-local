@@ -1,0 +1,62 @@
+#!/usr/bin/ruby
+
+require 'optparse'
+require 'pstore'
+require 'etc'
+
+heroku_helper = PStore.new(File.join(Etc.getpwuid.dir, '.heroku_helper'))
+
+# This file is designed to allow "cd"ing to a particular Heroku app
+
+pwd = Dir.pwd.to_s
+
+def execute_command(body)
+  heroku_helper = PStore.new(File.join(Etc.getpwuid.dir, '.heroku_helper'))
+  app_name = ''
+
+  heroku_helper.transaction(true) do
+    app_name = heroku_helper[Dir.pwd.to_s]
+  end
+
+  # pipe through script as it preserves colors for some reason while others did
+  # not
+  command = "script -q /dev/null heroku #{body} --app=#{app_name}"
+  puts "Running command: #{command}"
+  io = IO.popen(command)
+
+  io.each { |line| puts line }
+end
+
+if ARGV.length == 0
+  heroku_helper.transaction(true) do
+    app_name = heroku_helper[pwd]
+    if app_name
+      puts "Heroku Application set to: #{app_name} for #{pwd}"
+    else
+      puts "No Heroku Application set for #{pwd}"
+    end
+  end
+  exit
+end
+
+app_name = ARGV[0].match(/--app=(.+)/)
+if ARGV.length == 1 && app_name && app_name[1]
+  heroku_helper.transaction do
+    heroku_helper[pwd] = app_name
+  end
+  puts "Set heroku application to #{app_name[1]}."
+  exit
+end
+
+if ARGV.any? { |arg| arg.match(/--app/) }
+  `heroku #{ARGV}`
+  exit
+end
+
+if ARGV[0] == 'logs'
+  execute_command("logs -t --force-colors")
+  exit
+end
+
+execute_command(ARGV.join(' '))
+
